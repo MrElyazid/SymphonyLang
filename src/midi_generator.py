@@ -1,0 +1,1 @@
+# this file is responsible for generating the music .midi file from the output of the parser
