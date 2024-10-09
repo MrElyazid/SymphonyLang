@@ -1,3 +1,5 @@
+# this file is just for testing purposes and to get a basic idea how the project works
+
 import mido
 from mido import MidiFile, MidiTrack, Message
 import pygame

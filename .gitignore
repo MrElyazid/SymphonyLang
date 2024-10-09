@@ -1,1 +1,5 @@
 sym/
+src/__pycache__
+src/parser.out
+src/parsetab.py
+output.mid
