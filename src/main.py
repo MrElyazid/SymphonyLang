@@ -13,26 +13,26 @@ class SymphonyLangGUI:
         master.title("SymphonyLang")
         master.geometry("800x600")
 
-        # Initialize pygame mixer
+        # pygame mixer an7tajoh bach nkhadmo audio file b pygame
         pygame.mixer.init()
 
-        # Create main frame
+        # main frame if fih other frames
         main_frame = ttk.Frame(master)
         main_frame.pack(fill=BOTH, expand=YES, padx=10, pady=10)
 
-        # Create left frame for input
+        # frame dyal input
         left_frame = ttk.Frame(main_frame, width=400)
         left_frame.pack(side=LEFT, fill=BOTH, expand=YES)
 
-        # Create right frame for music player
+        # right frame dyal audio player
         right_frame = ttk.Frame(main_frame, width=400)
         right_frame.pack(side=RIGHT, fill=BOTH, expand=YES)
 
-        # Add text input field
+        # text input il kin f right frame
         self.input_text = tk.Text(left_frame, wrap=tk.WORD, width=40, height=20)
         self.input_text.pack(fill=BOTH, expand=YES, pady=(0, 10))
 
-        # Add buttons
+        # buttons
         button_frame = ttk.Frame(left_frame)
         button_frame.pack(fill=X)
 
@@ -42,11 +42,11 @@ class SymphonyLangGUI:
         upload_button = ttk.Button(button_frame, text="Upload txt", command=self.upload_txt)
         upload_button.pack(side=LEFT)
 
-        # Add status message area
+        # status message, wach comiling sucessful, with errors ... etc
         self.status_message = ttk.Label(left_frame, text="", wraplength=380)
         self.status_message.pack(fill=X, pady=(10, 0))
 
-        # Add music player controls
+        # music player controls
         self.player_label = ttk.Label(right_frame, text="No MIDI file generated yet")
         self.player_label.pack(pady=20)
 

@@ -1,5 +1,11 @@
+# had l file kaykhdem b lexer.py, kayakhod tokens o kay9ad bihom arbre syntaxique, l7ad sa3a had l'arbre ngdo ndiroha gha liste o safi
+# mni kanakhdo tokens knchofo wach ki7tarmo grammar rules, ( homa dok les regles semantiques wa9ila ) o knrj3o liste dyal wahed les objets
+# sminahom MusicElement ( chofo class ) had liste kikhdm biha mido_generator
+
+
+
 import ply.yacc as yacc
-from lexer import tokens, SymphonyLangLexerError
+from lexer import SymphonyLangLexerError, tokens, lexer # pay attention !! hada rah howa nefso li mdefini f lexer.py
 
 class SymphonyLangParserError(Exception):
     pass
@@ -21,7 +27,9 @@ class Composition:
     def __repr__(self):
         return f"Composition(tempo={self.tempo}, elements={self.elements})"
 
-# Grammar rules
+# Grammar rules, wach dakchi li khdnah mn 3nd lexer logic ola la, matalan tempo darori ikoun mn b3da = then a number ... etc rules bhal haka
+
+
 def p_composition(p):
     '''composition : tempo_setting element_list'''
     p[0] = Composition(p[1], p[2])
@@ -49,7 +57,7 @@ def p_element(p):
         
 
 def p_note(p):
-    'note : NOTE DURATION'
+    '''note : NOTE DURATION'''
     p[0] = MusicElement('note', p[1], p[2])
 
 def p_error(p):
@@ -58,20 +66,20 @@ def p_error(p):
     else:
         raise SymphonyLangParserError("Syntax error at EOF")
 
-# Build the parser
+# build the parser, again, rah automatically ghadi nkhdmo bl code lfo9 fach anjiw n buildiw lparser
 parser = yacc.yacc()
 
 # Function to parse SymphonyLang
 def parse_symphony_lang(input_text):
     try:
-        return parser.parse(input_text)
+        lexer.input(input_text.strip()) #remove leading/trailing whitespace
+        return parser.parse(lexer=lexer) # ATTENTION hada howa lien mabin parser o lexer
     except SymphonyLangLexerError as e:
         raise SymphonyLangParserError(f"Lexer error: {str(e)}")
 
-# Test the parser
+# code to test the functionality
 if __name__ == "__main__":
     test_input = """
-    # This is a test input
     tempo=120
     C4 qn  # This is middle C
     D4 hn
