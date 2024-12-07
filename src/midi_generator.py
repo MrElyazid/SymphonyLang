@@ -24,6 +24,15 @@ DURATION_TO_TICKS = {
     'wn': 1920, 'hn': 960, 'qn': 480, 'en': 240, 'sn': 120
 }
 
+# Scale patterns defined in semitones (half steps)
+SCALE_PATTERNS = {
+    'maj': [0, 2, 4, 5, 7, 9, 11, 12],  # Major scale
+    'min': [0, 2, 3, 5, 7, 8, 10, 12],  # Natural minor scale
+    'maj pent': [0, 2, 4, 7, 9, 12],    # Major pentatonic
+    'min pent': [0, 3, 5, 7, 10, 12],   # Minor pentatonic
+    'chrom': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # Chromatic scale
+}
+
 # fonction li kadir l conversion
 
 def note_to_midi_number(note):
@@ -39,6 +48,20 @@ def note_to_midi_number(note):
     except (KeyError, ValueError, IndexError):
         raise MIDIGenerationError(f"Invalid note: {note}")
 
+def generate_scale_notes(root_note, scale_type, extension=None):
+    """Generate MIDI note numbers for a scale starting from root_note"""
+    try:
+        root_midi = note_to_midi_number(root_note)
+        scale_key = f"{scale_type} {extension}" if extension else scale_type
+        
+        if scale_key not in SCALE_PATTERNS:
+            raise MIDIGenerationError(f"Unsupported scale type: {scale_key}")
+        
+        pattern = SCALE_PATTERNS[scale_key]
+        return [root_midi + interval for interval in pattern]
+    except Exception as e:
+        raise MIDIGenerationError(f"Error generating scale: {str(e)}")
+
 def generate_midi(composition: Composition, output_file: str):
     mid = mido.MidiFile()
     track = mido.MidiTrack()
@@ -48,16 +71,47 @@ def generate_midi(composition: Composition, output_file: str):
     track.append(mido.MetaMessage('set_tempo', tempo=tempo))
 
     for element in composition.elements:
-        if isinstance(element, MusicElement) and element.type == 'note':
+        if not isinstance(element, MusicElement):
+            continue
+
+        if element.type == 'note':
             try:
                 midi_note = note_to_midi_number(element.value)
                 duration = DURATION_TO_TICKS[element.duration]
             except KeyError:
                 raise MIDIGenerationError(f"Invalid duration: {element.duration}")
 
-            velocity = 64  # Default velocity, can be adjusted for dynamics later
+            velocity = 64  # Default velocity
             track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=0))
             track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=duration))
+
+        elif element.type == 'scale':
+            try:
+                scale_value = element.value  # Dictionary containing root, type, and extension
+                scale_notes = generate_scale_notes(
+                    scale_value['root'],
+                    scale_value['type'],
+                    scale_value['extension']
+                )
+                
+                # Play each note in the scale
+                note_duration = DURATION_TO_TICKS['qn']  # Use quarter notes for scales
+                velocity = 64
+                
+                # Play ascending
+                for i, midi_note in enumerate(scale_notes):
+                    # First note has time=0, others follow previous note
+                    time = 0 if i == 0 else note_duration
+                    track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=time))
+                    track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=note_duration))
+                
+                # Play descending (excluding the last note as it's the same as first note of next octave)
+                for midi_note in reversed(scale_notes[:-1]):
+                    track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=note_duration))
+                    track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=note_duration))
+                
+            except Exception as e:
+                raise MIDIGenerationError(f"Error processing scale: {str(e)}")
 
     try:
         mid.save(output_file)
@@ -69,9 +123,8 @@ if __name__ == "__main__":
         tempo=120,
         elements=[
             MusicElement('note', 'C4', 'qn'),
-            MusicElement('note', 'D4', 'hn'),
-            MusicElement('note', 'E4', 'qn'),
-            MusicElement('note', 'F4', 'wn'),
+            MusicElement('scale', {'root': 'C4', 'type': 'maj', 'extension': None}),
+            MusicElement('scale', {'root': 'A4', 'type': 'min', 'extension': 'pent'}),
         ]
     )
     try:

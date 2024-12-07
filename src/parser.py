@@ -49,7 +49,8 @@ def p_element_list(p):
 # Ensure element correctly captures NEWLINE
 def p_element(p):
     '''element : note
-               | NEWLINE'''  # Modify to allow NEWLINE as its own element
+               | scale
+               | NEWLINE'''  # Modified to include scale as a valid element
     if len(p) == 2 and isinstance(p[1], MusicElement):
         p[0] = p[1]
     else:
@@ -59,6 +60,26 @@ def p_element(p):
 def p_note(p):
     '''note : NOTE DURATION'''
     p[0] = MusicElement('note', p[1], p[2])
+
+def p_scale(p):
+    '''scale : NOTE SCALE_TYPE
+             | NOTE SCALE_TYPE SCALE_EXTENSION'''
+    if len(p) == 3:
+        # Basic scale (major/minor)
+        scale_value = {
+            'root': p[1],
+            'type': p[2],
+            'extension': None
+        }
+        p[0] = MusicElement('scale', scale_value, 'qn')  # Default duration for scales
+    elif len(p) == 4:
+        # Extended scale (pentatonic/chromatic)
+        scale_value = {
+            'root': p[1],
+            'type': p[2],
+            'extension': p[3]
+        }
+        p[0] = MusicElement('scale', scale_value, 'qn')  # Default duration for scales
 
 def p_error(p):
     if p:
@@ -85,6 +106,8 @@ if __name__ == "__main__":
     D4 hn
     E4 qn
     F4 wn
+    C4 maj  # Test major scale
+    A4 min pent  # Test pentatonic minor scale
     """
     try:
         result = parse_symphony_lang(test_input)
@@ -92,6 +115,6 @@ if __name__ == "__main__":
         print(f"Tempo: {result.tempo}")
         for element in result.elements:
             if isinstance(element, MusicElement):
-                print(f"Note: {element.value}, Duration: {element.duration}")
+                print(f"Type: {element.type}, Value: {element.value}, Duration: {element.duration}")
     except SymphonyLangParserError as e:
         print(f"Parser Error: {str(e)}")
