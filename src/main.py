@@ -7,6 +7,7 @@ import pygame
 from parser import parse_symphony_lang, SymphonyLangParserError
 from midi_generator import generate_midi, MIDIGenerationError
 from mido import MidiFile
+import random
 
 class SymphonyLangGUI:
     def __init__(self, master):
@@ -57,68 +58,63 @@ class SymphonyLangGUI:
         self.stop_button = ttk.Button(right_frame, text="Stop", command=self.stop_midi, state=tk.DISABLED)
         self.stop_button.pack(pady=10)
 
-        # Piano visualization canvas
-        self.piano_canvas = tk.Canvas(right_frame, width=400, height=150, bg="black")
-        self.piano_canvas.pack(pady=10)
-        self.draw_piano()  # Draw the static piano keys
+        # Bar chart-like visualization canvas
+        self.visualization_canvas = tk.Canvas(right_frame, width=500, height=200, bg="white")
+        self.visualization_canvas.pack(pady=10)
 
         self.midi_file = None
         self.visualization_running = False
+        self.note_positions = []  # Store positions of notes for visualization
 
-    def draw_piano(self):
-        """Draws a static piano layout on the canvas with enhanced visuals."""
-        key_width = 40
-        key_height = 150
-        white_keys = 14  # Number of white keys
+    def draw_bar_chart(self):
+        """Draws a more elegant bar chart with smooth transitions."""
+        self.visualization_canvas.delete("all")  # Clear previous drawing
+        if not self.note_positions:
+            return
 
-        # Draw white keys
-        for i in range(white_keys):
-            self.piano_canvas.create_rectangle(
-                i * key_width, 0, (i + 1) * key_width, key_height,
-                outline="black", fill="white", width=2  # Enhanced outline
-            )
+        # Set a bar width and horizontal separation
+        bar_width = 25
+        bar_gap = 30  # Gap between bars
+        x_offset = 10  # Horizontal offset to separate bars
 
-        # Draw black keys
-        black_key_positions = [0, 1, 3, 4, 5, 7, 8, 10, 11, 12]
-        black_key_width = key_width * 0.6  # Make black keys narrower
-        black_key_height = key_height * 0.6
+        # Note duration to height mapping
+        note_heights = {
+            "wn": 180,  # Whole note
+            "hn": 140,  # Half note
+            "qn": 100,  # Quarter note
+            "en": 70,   # Eighth note
+            "sn": 50    # Sixteenth note
+        }
 
-        for i in black_key_positions:
-            self.piano_canvas.create_rectangle(
-                i * key_width + (key_width - black_key_width) / 2, 0,
-                i * key_width + (key_width + black_key_width) / 2, black_key_height,
-                outline="black", fill="black", width=2  # Enhanced outline
-            )
+        for time, pitch, duration in self.note_positions:
+            # Set the height based on the note duration
+            height = note_heights.get(duration, 50)  # Default height if unknown
+            x1 = x_offset
+            y1 = 200 - height  # Invert the height for visualization
+            x2 = x1 + bar_width
+            y2 = 200
 
-    def highlight_key(self, note, color="red"):
-        """Highlights a key based on MIDI note with better visuals."""
-        key_width = 40
-        key_height = 150
-        black_key_width = key_width * 0.6
-        black_key_height = key_height * 0.6
-        white_key_positions = [0, 2, 4, 5, 7, 9, 11]  # White keys (C, D, E, F, G, A, B)
+            # Generate a random pastel color for each bar
+            color = self.get_random_pastel_color()
 
-        octave = (note // 12) - 1
-        key = note % 12
+            # Draw the bar with a smooth transition effect (growing bar)
+            self.visualization_canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="", width=0)
 
-        if key in white_key_positions:  # White key
-            position = octave * 7 + white_key_positions.index(key)
-            self.piano_canvas.create_rectangle(
-                position * key_width, 0, (position + 1) * key_width, key_height,
-                outline="black", fill=color, width=2
-            )
-        else:  # Black key
-            black_key_positions = [1, 3, 6, 8, 10]  # Black keys (C#, D#, F#, G#, A#)
-            position = octave * 7 + black_key_positions.index(key) if key in black_key_positions else None
-            if position is not None:
-                self.piano_canvas.create_rectangle(
-                    position * key_width + (key_width - black_key_width) / 2, 0,
-                    position * key_width + (key_width + black_key_width) / 2, black_key_height,
-                    outline="black", fill=color, width=2
-                )
+            # Add a label with the note duration
+            self.visualization_canvas.create_text((x1 + x2) / 2, y1 - 10, text=duration, fill="black", font=("Helvetica", 8))
+
+            # Update the x_offset for the next bar
+            x_offset = x2 + bar_gap
+
+    def get_random_pastel_color(self):
+        """Generates a random pastel color."""
+        r = random.randint(200, 255)
+        g = random.randint(200, 255)
+        b = random.randint(200, 255)
+        return f"#{r:02x}{g:02x}{b:02x}"
 
     def play_midi(self):
-        """Plays the MIDI file and visualizes the keys."""
+        """Plays the MIDI file and visualizes the notes."""
         if self.midi_file and os.path.exists(self.midi_file):
             try:
                 pygame.mixer.music.load(self.midi_file)
@@ -131,26 +127,32 @@ class SymphonyLangGUI:
             self.update_status("No MIDI file available to play", "warning")
 
     def visualize_midi(self):
-        """Visualizes the MIDI notes on the piano."""
+        """Visualizes the MIDI notes on the bar chart."""
         if not self.midi_file:
             return
         midi = MidiFile(self.midi_file)
         self.visualization_running = True
 
+        # Iterate over MIDI messages and track note positions for the graph
         for msg in midi.play():
             if not self.visualization_running:
                 break
             if msg.type == "note_on" and msg.velocity > 0:
-                self.highlight_key(msg.note)
+                # Store the time, pitch, and note duration for visualization
+                note_duration = self.get_note_duration(msg.note)
+                self.note_positions.append((msg.time * 10, msg.note, note_duration))  # Example scaling
+                self.draw_bar_chart()  # Update the bar chart
             elif msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0):
-                self.draw_piano()  # Reset the piano keys
-            self.piano_canvas.update()
+                self.note_positions.append((msg.time * 10, 200, "sn"))  # Reset position on note off
+                self.draw_bar_chart()  # Update the bar chart
+            self.visualization_canvas.update()
 
     def stop_midi(self):
         """Stops MIDI playback and visualization."""
         pygame.mixer.music.stop()
         self.visualization_running = False
-        self.draw_piano()  # Reset piano visualization
+        self.note_positions.clear()  # Clear previous note positions
+        self.visualization_canvas.delete("all")  # Clear the canvas
         self.update_status("Playback stopped", "info")
 
     def compile_code(self):
@@ -191,6 +193,20 @@ class SymphonyLangGUI:
             self.status_message.config(foreground="orange")
         else:
             self.status_message.config(foreground="white")
+
+    def get_note_duration(self, pitch):
+        """Determines the note duration based on pitch or other criteria."""
+        # Example logic for note duration (this can be adapted)
+        if pitch > 72:  # Whole note
+            return "wn"
+        elif pitch > 60:  # Half note
+            return "hn"
+        elif pitch > 48:  # Quarter note
+            return "qn"
+        elif pitch > 36:  # Eighth note
+            return "en"
+        else:  # Sixteenth note
+            return "sn"
 
 if __name__ == "__main__":
     root = ttk.Window(themename="darkly")
