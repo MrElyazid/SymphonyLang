@@ -1,11 +1,6 @@
-# had l file kaykhdem b lexer.py, kayakhod tokens o kay9ad bihom arbre syntaxique, l7ad sa3a had l'arbre ngdo ndiroha gha liste o safi
-# mni kanakhdo tokens knchofo wach ki7tarmo grammar rules, ( homa dok les regles semantiques wa9ila ) o knrj3o liste dyal wahed les objets
-# sminahom MusicElement ( chofo class ) had liste kikhdm biha mido_generator
-
-
 
 import ply.yacc as yacc
-from lexer import SymphonyLangLexerError, tokens, lexer # pay attention !! hada rah howa nefso li mdefini f lexer.py
+from lexer import SymphonyLangLexerError, tokens, lexer
 
 class SymphonyLangParserError(Exception):
     pass
@@ -26,8 +21,6 @@ class Composition:
 
     def __repr__(self):
         return f"Composition(tempo={self.tempo}, elements={self.elements})"
-
-# Grammar rules, wach dakchi li khdnah mn 3nd lexer logic ola la, matalan tempo darori ikoun mn b3da = then a number ... etc rules bhal haka
 
 
 def p_composition(p):
@@ -87,18 +80,18 @@ def p_error(p):
     else:
         raise SymphonyLangParserError("Syntax error at EOF")
 
-# build the parser, again, rah automatically ghadi nkhdmo bl code lfo9 fach anjiw n buildiw lparser
+# build the parser
 parser = yacc.yacc()
 
 # Function to parse SymphonyLang
 def parse_symphony_lang(input_text):
     try:
-        lexer.input(input_text.strip()) #remove leading/trailing whitespace
-        return parser.parse(lexer=lexer) # ATTENTION hada howa lien mabin parser o lexer
+        lexer.input(input_text.strip())
+        return parser.parse(lexer=lexer)
     except SymphonyLangLexerError as e:
         raise SymphonyLangParserError(f"Lexer error: {str(e)}")
 
-# code to test the functionality
+
 if __name__ == "__main__":
     test_input = """
     tempo=120

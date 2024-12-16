@@ -1,7 +1,3 @@
-# had l file kayakhod l output dyal parser.py o kay generer audio file ( midi file ), daba parser.py kay produit list ( ngolo arbre )
-# dyal objects sminahom MusicElement, role dyal midi_generator ndiro track o n appendiw lih musicelements, walakin en respectant syntax
-# dyal mido library, donc khass ndiro translation l kola MusicElement l mido syntax o ndiroh f track
-
 
 import mido
 from parser import Composition, MusicElement
@@ -10,15 +6,9 @@ class MIDIGenerationError(Exception):
     pass
 
 
-# khass ndiro translation l kola MusicElement l syntax li ngdo n generiwh bih b mido library matalan note dyal C4 haka : 
-# track.append(Message('note_on', note=60, velocity=64, time=0)) hnaya C t mappat l 60 dakchi lach khass had dictionnaire
-
 NOTE_TO_MIDI = {
     'C': 60, 'D': 62, 'E': 64, 'F': 65, 'G': 67, 'A': 69, 'B': 71
 }
-
-# nefs lhaja bnisba l duration dyal notes, khass nraj3ohom ticks, google ticks f mido and how to convert them to seconds, atkoun wahed 
-# l formule li fiha temp imkn
 
 DURATION_TO_TICKS = {
     'wn': 1920, 'hn': 960, 'qn': 480, 'en': 240, 'sn': 120
@@ -32,8 +22,6 @@ SCALE_PATTERNS = {
     'min pent': [0, 3, 5, 7, 10, 12],   # Minor pentatonic
     'chrom': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # Chromatic scale
 }
-
-# fonction li kadir l conversion
 
 def note_to_midi_number(note):
     try:
