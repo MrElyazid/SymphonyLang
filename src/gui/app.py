@@ -66,6 +66,11 @@ class SymphonyLangGUI:
                                  command=self.file_handler.upload_txt)
         upload_button.pack(side=LEFT)
 
+        # New button for generating pseudo code
+        pseudo_code_button = ttk.Button(button_frame, text="Generate Pseudo Code", 
+                                        command=self.file_handler.generate_pseudo_code)
+        pseudo_code_button.pack(side=LEFT, padx=(5, 0))
+
     def setup_status_message(self):
         # Status message
         self.status_message = ttk.Label(self.left_frame, text="", wraplength=380)

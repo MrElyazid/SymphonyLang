@@ -10,6 +10,46 @@ class FileHandler:
         self.update_status = status_callback
         self.set_midi_file = set_midi_file_callback
         self.enable_controls = enable_controls_callback
+        self.pseudo_code_snippets = [
+            """
+tempo=120
+
+# Play a simple melody
+C4 qn
+E4 qn
+G4 hn
+C5 wn
+
+# Add a scale
+C4 maj
+""",
+            """
+tempo=100
+
+# Play a different melody
+D4 qn
+F#4 qn
+A4 hn
+D5 wn
+
+# Add a scale
+D4 min
+""",
+            """
+tempo=140
+
+# Play a new melody
+E4 qn
+G#4 qn
+B4 hn
+E5 wn
+
+# Add a scale
+E4 maj
+""",
+            # Add more snippets as needed
+        ]
+        self.current_snippet_index = 0
 
     def compile_code(self):
         """Compiles the SymphonyLang code to MIDI."""
@@ -37,3 +77,13 @@ class FileHandler:
                 self.update_status(f"File loaded: {os.path.basename(file_path)}", "success")
             except IOError as e:
                 self.update_status(f"Error loading file: {str(e)}", "error")
+
+    def generate_pseudo_code(self):
+        """Generates pseudo code for testing."""
+        pseudo_code = self.pseudo_code_snippets[self.current_snippet_index]
+        self.input_text.delete("1.0", tk.END)
+        self.input_text.insert(tk.END, pseudo_code)
+        self.update_status("Pseudo code generated!", "success")
+        
+        # Update the index for the next snippet
+        self.current_snippet_index = (self.current_snippet_index + 1) % len(self.pseudo_code_snippets)
