@@ -1,64 +1,83 @@
 import tkinter as tk
-import random
+import colorsys
 from mido import MidiFile
 
 class Visualizer:
     def __init__(self, parent_frame):
         self.parent_frame = parent_frame
         self.visualization_running = False
-        self.note_positions = []  # Store positions of notes for visualization
+        self.active_notes = []  # Store currently playing notes
         
-        # Bar chart-like visualization canvas
-        self.visualization_canvas = tk.Canvas(parent_frame, width=500, height=200, bg="white")
+        # Bar chart-like visualization canvas with dark background
+        self.visualization_canvas = tk.Canvas(
+            parent_frame,
+            width=500,
+            height=200,
+            bg="#1e1e1e"  # Dark background matching common dark themes
+        )
         self.visualization_canvas.pack(pady=10)
 
+        # Canvas dimensions
+        self.canvas_width = 500
+        self.canvas_height = 200
+
     def draw_bar_chart(self):
-        """Draws a more elegant bar chart with smooth transitions."""
+        """Draws a bar chart with heights based on note pitch and colors based on position in octave."""
         self.visualization_canvas.delete("all")  # Clear previous drawing
-        if not self.note_positions:
+        if not self.active_notes:
             return
 
-        # Set a bar width and horizontal separation
-        bar_width = 25
-        bar_gap = 30  # Gap between bars
-        x_offset = 10  # Horizontal offset to separate bars
+        # Constants for visualization
+        bar_width = 30
+        min_pitch = 21  # A0 (lowest piano key)
+        max_pitch = 108  # C8 (highest piano key)
+        pitch_range = max_pitch - min_pitch
+        max_height = 180  # Maximum bar height
 
-        # Note duration to height mapping
-        note_heights = {
-            "wn": 180,  # Whole note
-            "hn": 140,  # Half note
-            "qn": 100,  # Quarter note
-            "en": 70,   # Eighth note
-            "sn": 50    # Sixteenth note
-        }
+        # Calculate spacing between bars
+        total_width = len(self.active_notes) * bar_width
+        spacing = min((self.canvas_width - total_width) / (len(self.active_notes) + 1), 50)
+        
+        # Draw each active note
+        for i, (pitch, velocity) in enumerate(self.active_notes):
+            # Calculate x position to distribute bars across canvas
+            x_position = spacing + (i * (bar_width + spacing))
 
-        for time, pitch, duration in self.note_positions:
-            # Set the height based on the note duration
-            height = note_heights.get(duration, 50)  # Default height if unknown
-            x1 = x_offset
-            y1 = 200 - height  # Invert the height for visualization
+            # Calculate height based on pitch
+            normalized_pitch = (pitch - min_pitch) / pitch_range
+            height = normalized_pitch * max_height
+
+            x1 = x_position
+            y1 = self.canvas_height - height  # Invert the height for visualization
             x2 = x1 + bar_width
-            y2 = 200
+            y2 = self.canvas_height
 
-            # Generate a random pastel color for each bar
-            color = self.get_random_pastel_color()
+            # Calculate color based on note position in octave
+            note_in_octave = (pitch - min_pitch) % 12
+            hue = note_in_octave / 12
+            saturation = 0.7
+            value = 0.8 + ((velocity / 127) * 0.2)
+            rgb = colorsys.hsv_to_rgb(hue, saturation, value)
+            color = f'#{int(rgb[0]*255):02x}{int(rgb[1]*255):02x}{int(rgb[2]*255):02x}'
 
-            # Draw the bar with a smooth transition effect
-            self.visualization_canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="", width=0)
+            # Draw the bar
+            self.visualization_canvas.create_rectangle(
+                x1, y1, x2, y2,
+                fill=color,
+                outline="#2d2d2d",  # Slight outline for separation
+                width=1
+            )
 
-            # Add a label with the note duration
-            self.visualization_canvas.create_text((x1 + x2) / 2, y1 - 10, text=duration, 
-                                               fill="black", font=("Helvetica", 8))
-
-            # Update the x_offset for the next bar
-            x_offset = x2 + bar_gap
-
-    def get_random_pastel_color(self):
-        """Generates a random pastel color."""
-        r = random.randint(200, 255)
-        g = random.randint(200, 255)
-        b = random.randint(200, 255)
-        return f"#{r:02x}{g:02x}{b:02x}"
+            # Add note name label in white
+            note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            note_name = note_names[note_in_octave]
+            octave = (pitch - min_pitch) // 12
+            self.visualization_canvas.create_text(
+                (x1 + x2) / 2, y1 - 10,
+                text=f"{note_name}{octave}",
+                fill="white",  # White text for dark background
+                font=("Helvetica", 8)
+            )
 
     def visualize_midi(self, midi_file):
         """Visualizes the MIDI notes on the bar chart."""
@@ -66,36 +85,26 @@ class Visualizer:
             return
         midi = MidiFile(midi_file)
         self.visualization_running = True
+        self.active_notes = []
 
-        # Iterate over MIDI messages and track note positions for the graph
+        # Iterate over MIDI messages and update active notes
         for msg in midi.play():
             if not self.visualization_running:
                 break
+
             if msg.type == "note_on" and msg.velocity > 0:
-                # Store the time, pitch, and note duration for visualization
-                note_duration = self.get_note_duration(msg.note)
-                self.note_positions.append((msg.time * 10, msg.note, note_duration))
+                # Add note to active notes
+                self.active_notes.append((msg.note, msg.velocity))
                 self.draw_bar_chart()
             elif msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0):
-                self.note_positions.append((msg.time * 10, 200, "sn"))
+                # Remove note from active notes
+                self.active_notes = [(n, v) for n, v in self.active_notes if n != msg.note]
                 self.draw_bar_chart()
+            
             self.visualization_canvas.update()
 
     def stop_visualization(self):
         """Stops the visualization."""
         self.visualization_running = False
-        self.note_positions.clear()  # Clear previous note positions
+        self.active_notes = []  # Clear active notes
         self.visualization_canvas.delete("all")  # Clear the canvas
-
-    def get_note_duration(self, pitch):
-        """Determines the note duration based on pitch."""
-        if pitch > 72:  # Whole note
-            return "wn"
-        elif pitch > 60:  # Half note
-            return "hn"
-        elif pitch > 48:  # Quarter note
-            return "qn"
-        elif pitch > 36:  # Eighth note
-            return "en"
-        else:  # Sixteenth note
-            return "sn"

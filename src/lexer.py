@@ -13,7 +13,9 @@ tokens = (
     'SCALE_TYPE',
     'SCALE_EXTENSION',
     'CHORD',
-    'REST'
+    'REST',
+    'LBRACKET',
+    'RBRACKET'
 )
 
 t_NOTE = r'[A-G](\#|b)?[0-9]'
@@ -23,29 +25,25 @@ t_EQUALS = r'='
 t_REST = r'wr|hr|qr|er|sr'
 t_SCALE_TYPE = r'maj|min'
 t_SCALE_EXTENSION = r'pent|chrom'
+t_LBRACKET = r'\['
+t_RBRACKET = r'\]'
 
-
-#number token rule
 def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
     return t
 
-#newline token rule
 def t_NEWLINE(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
     return t
 
-#comment token rule
 def t_COMMENT(t):
     r'\#.*'
     pass
 
-#dima kn7tajo hadi :
 t_ignore = ' \t'
 
-#raise an error if we encounter a token we didnt define
 def t_error(t):
     raise SymphonyLangLexerError(f"Illegal character '{t.value[0]}' at line {t.lexer.lineno}")
 
@@ -70,6 +68,7 @@ if __name__ == "__main__":
     D4 hn
     E4 qn
     F4 wn
+    [C4 E4] wn  # Simultaneous notes
     """
     try:
         tokens = get_all_tokens(test_input)

@@ -1,10 +1,8 @@
-
 import mido
 from parser import Composition, MusicElement
 
 class MIDIGenerationError(Exception):
     pass
-
 
 NOTE_TO_MIDI = {
     'C': 60, 'D': 62, 'E': 64, 'F': 65, 'G': 67, 'A': 69, 'B': 71
@@ -14,13 +12,12 @@ DURATION_TO_TICKS = {
     'wn': 1920, 'hn': 960, 'qn': 480, 'en': 240, 'sn': 120
 }
 
-# Scale patterns defined in semitones (half steps)
 SCALE_PATTERNS = {
-    'maj': [0, 2, 4, 5, 7, 9, 11, 12],  # Major scale
-    'min': [0, 2, 3, 5, 7, 8, 10, 12],  # Natural minor scale
-    'maj pent': [0, 2, 4, 7, 9, 12],    # Major pentatonic
-    'min pent': [0, 3, 5, 7, 10, 12],   # Minor pentatonic
-    'chrom': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # Chromatic scale
+    'maj': [0, 2, 4, 5, 7, 9, 11, 12],
+    'min': [0, 2, 3, 5, 7, 8, 10, 12],
+    'maj pent': [0, 2, 4, 7, 9, 12],
+    'min pent': [0, 3, 5, 7, 10, 12],
+    'chrom': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 }
 
 def note_to_midi_number(note):
@@ -37,7 +34,6 @@ def note_to_midi_number(note):
         raise MIDIGenerationError(f"Invalid note: {note}")
 
 def generate_scale_notes(root_note, scale_type, extension=None):
-    """Generate MIDI note numbers for a scale starting from root_note"""
     try:
         root_midi = note_to_midi_number(root_note)
         scale_key = f"{scale_type} {extension}" if extension else scale_type
@@ -69,37 +65,49 @@ def generate_midi(composition: Composition, output_file: str):
             except KeyError:
                 raise MIDIGenerationError(f"Invalid duration: {element.duration}")
 
-            velocity = 64  # Default velocity
+            velocity = 64
             track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=0))
             track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=duration))
 
         elif element.type == 'scale':
             try:
-                scale_value = element.value  # Dictionary containing root, type, and extension
+                scale_value = element.value
                 scale_notes = generate_scale_notes(
                     scale_value['root'],
                     scale_value['type'],
                     scale_value['extension']
                 )
                 
-                # Play each note in the scale
-                note_duration = DURATION_TO_TICKS['qn']  # Use quarter notes for scales
+                note_duration = DURATION_TO_TICKS['qn']
                 velocity = 64
                 
-                # Play ascending
                 for i, midi_note in enumerate(scale_notes):
-                    # First note has time=0, others follow previous note
                     time = 0 if i == 0 else note_duration
                     track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=time))
                     track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=note_duration))
                 
-                # Play descending (excluding the last note as it's the same as first note of next octave)
                 for midi_note in reversed(scale_notes[:-1]):
                     track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=note_duration))
                     track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=note_duration))
                 
             except Exception as e:
                 raise MIDIGenerationError(f"Error processing scale: {str(e)}")
+
+        elif element.type == 'chord':
+            try:
+                chord_notes = [note_to_midi_number(note) for note in element.value]
+                duration = DURATION_TO_TICKS[element.duration]
+            except KeyError:
+                raise MIDIGenerationError(f"Invalid duration: {element.duration}")
+
+            velocity = 64
+            for i, midi_note in enumerate(chord_notes):
+                time = 0 if i == 0 else 0  # All notes start at the same time
+                track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=time))
+            
+            for i, midi_note in enumerate(chord_notes):
+                time = duration if i == 0 else 0  # All notes end at the same time
+                track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=time))
 
     try:
         mid.save(output_file)
@@ -113,6 +121,7 @@ if __name__ == "__main__":
             MusicElement('note', 'C4', 'qn'),
             MusicElement('scale', {'root': 'C4', 'type': 'maj', 'extension': None}),
             MusicElement('scale', {'root': 'A4', 'type': 'min', 'extension': 'pent'}),
+            MusicElement('chord', ['C4', 'E4', 'G4'], 'wn'),
         ]
     )
     try:
