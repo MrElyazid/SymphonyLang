@@ -41,11 +41,16 @@ def p_element(p):
     '''element : note
                | scale
                | chord
+               | rest
                | NEWLINE'''
     if len(p) == 2 and isinstance(p[1], MusicElement):
         p[0] = p[1]
     else:
         p[0] = None
+
+def p_rest(p):
+    '''rest : REST'''
+    p[0] = MusicElement('rest', None, p[1])
 
 def p_note(p):
     '''note : NOTE DURATION'''

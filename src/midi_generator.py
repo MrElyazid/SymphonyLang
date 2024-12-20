@@ -9,7 +9,10 @@ NOTE_TO_MIDI = {
 }
 
 DURATION_TO_TICKS = {
-    'wn': 1920, 'hn': 960, 'qn': 480, 'en': 240, 'sn': 120
+    # Note durations
+    'wn': 1920, 'hn': 960, 'qn': 480, 'en': 240, 'sn': 120,
+    # Rest durations (same timing as corresponding notes)
+    'wr': 1920, 'hr': 960, 'qr': 480, 'er': 240, 'sr': 120
 }
 
 SCALE_PATTERNS = {
@@ -58,7 +61,16 @@ def generate_midi(composition: Composition, output_file: str):
         if not isinstance(element, MusicElement):
             continue
 
-        if element.type == 'note':
+        if element.type == 'rest':
+            try:
+                duration = DURATION_TO_TICKS[element.duration]
+                # For a rest, we just add the time delay without any note events
+                track.append(mido.Message('note_on', note=0, velocity=0, time=duration))
+                track.append(mido.Message('note_off', note=0, velocity=0, time=0))
+            except KeyError:
+                raise MIDIGenerationError(f"Invalid rest duration: {element.duration}")
+
+        elif element.type == 'note':
             try:
                 midi_note = note_to_midi_number(element.value)
                 duration = DURATION_TO_TICKS[element.duration]

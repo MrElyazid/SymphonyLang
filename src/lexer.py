@@ -28,6 +28,8 @@ t_SCALE_EXTENSION = r'pent|chrom'
 t_LBRACKET = r'\['
 t_RBRACKET = r'\]'
 
+
+
 def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
