@@ -66,11 +66,10 @@ if __name__ == "__main__":
     test_input = """
     # This is a test input
     tempo=120
-    C4 qn  # This is middle C
-    D4 hn
-    E4 qn
-    F4 wn
-    [C4 E4] wn  # Simultaneous notes
+    C4 qn
+    qr
+    C4 maj
+    [C4 E4] wn
     """
     try:
         tokens = get_all_tokens(test_input)

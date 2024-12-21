@@ -1,5 +1,5 @@
 import mido
-from src.parser import Composition, MusicElement
+from parser import Composition, MusicElement
 
 class MIDIGenerationError(Exception):
     pass

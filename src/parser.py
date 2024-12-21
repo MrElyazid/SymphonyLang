@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from src.lexer import SymphonyLangLexerError, tokens, lexer
+from lexer import SymphonyLangLexerError, tokens, lexer
 
 class SymphonyLangParserError(Exception):
     pass
@@ -107,13 +107,10 @@ def parse_symphony_lang(input_text):
 if __name__ == "__main__":
     test_input = """
     tempo=120
-    C4 qn  # This is middle C
-    D4 hn
-    E4 qn
-    F4 wn
-    C4 maj  # Test major scale
-    A4 min pent  # Test pentatonic minor scale
-    [C4 E4 G4] wn  # Test chord
+    C4 qn
+    C4 maj
+    A4 min pent
+    [C4 E4 G4] wn
     """
     try:
         result = parse_symphony_lang(test_input)
