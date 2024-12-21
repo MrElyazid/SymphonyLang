@@ -9,15 +9,15 @@ class MIDIPlayer:
         self.parent_frame = parent_frame
         self.update_status = status_callback
         self.midi_file = None
-        self.visualizer = None  # Will be set by the app
+        self.visualizer = None  
         
-        # Initialize pygame mixer
+        
         pygame.mixer.init()
         
         self.setup_player_controls()
 
     def setup_player_controls(self):
-        # Music player controls
+        
         self.player_label = ttk.Label(self.parent_frame, text="No MIDI file generated yet")
         self.player_label.pack(pady=20)
 

@@ -12,27 +12,27 @@ class SymphonyLangGUI:
         master.title("SymphonyLang")
         master.geometry("900x600")
 
-        # Initialize frames first
+        
         self.setup_main_frame()
         self.setup_frames()
         
-        # Initialize text input and status message
+        
         self.setup_text_input()
         self.setup_status_message()
         
-        # Initialize sub-components
+        
         self.player = MIDIPlayer(self.right_frame, self.update_status)
         self.visualizer = Visualizer(self.right_frame)
         
-        # Connect player and visualizer
+        
         self.player.set_visualizer(self.visualizer)
         
-        # Initialize file handler
+        
         self.file_handler = FileHandler(self.input_text, self.update_status, 
                                       self.player.set_midi_file,
                                       self.player.enable_controls)
         
-        # Setup buttons last since they depend on file_handler
+        
         self.setup_buttons()
 
     def setup_main_frame(self):

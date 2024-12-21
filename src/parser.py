@@ -108,9 +108,9 @@ if __name__ == "__main__":
     test_input = """
     tempo=120
     C4 qn
+    qr
     C4 maj
-    A4 min pent
-    [C4 E4 G4] wn
+    [C4 E4] wn
     """
     try:
         result = parse_symphony_lang(test_input)

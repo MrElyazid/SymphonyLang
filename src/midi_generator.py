@@ -127,11 +127,11 @@ def generate_midi(composition: Composition, output_file: str):
 
             velocity = 64
             for i, midi_note in enumerate(chord_notes):
-                time = 0 if i == 0 else 0  # All notes start at the same time
+                time = 0 if i == 0 else 0
                 track.append(mido.Message('note_on', note=midi_note, velocity=velocity, time=time))
             
             for i, midi_note in enumerate(chord_notes):
-                time = duration if i == 0 else 0  # All notes end at the same time
+                time = duration if i == 0 else 0
                 track.append(mido.Message('note_off', note=midi_note, velocity=velocity, time=time))
 
     try:

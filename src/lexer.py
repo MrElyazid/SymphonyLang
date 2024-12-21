@@ -64,7 +64,7 @@ def get_all_tokens(input_string):
 
 if __name__ == "__main__":
     test_input = """
-    # This is a test input
+    # this is a comment
     tempo=120
     C4 qn
     qr

@@ -47,7 +47,7 @@ E5 wn
 # Add a scale
 E4 maj
 """,
-            # Add more snippets as needed
+        
         ]
         self.current_snippet_index = 0
 
@@ -85,5 +85,4 @@ E4 maj
         self.input_text.insert(tk.END, pseudo_code)
         self.update_status("Pseudo code generated!", "success")
         
-        # Update the index for the next snippet
         self.current_snippet_index = (self.current_snippet_index + 1) % len(self.pseudo_code_snippets)

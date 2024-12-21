@@ -6,14 +6,14 @@ class Visualizer:
     def __init__(self, parent_frame):
         self.parent_frame = parent_frame
         self.visualization_running = False
-        self.active_notes = []  # Store currently playing notes
+        self.active_notes = []
         
-        # Bar chart-like visualization canvas with dark background
+        
         self.visualization_canvas = tk.Canvas(
             parent_frame,
             width=500,
             height=200,
-            bg="#1e1e1e"  # Dark background matching common dark themes
+            bg="#1e1e1e" # Dark background
         )
         self.visualization_canvas.pack(pady=10)
 
@@ -23,7 +23,7 @@ class Visualizer:
 
     def draw_bar_chart(self):
         """Draws a bar chart with heights based on note pitch and colors based on position in octave."""
-        self.visualization_canvas.delete("all")  # Clear previous drawing
+        self.visualization_canvas.delete("all")
         if not self.active_notes:
             return
 
@@ -40,10 +40,10 @@ class Visualizer:
         
         # Draw each active note
         for i, (pitch, velocity) in enumerate(self.active_notes):
-            # Calculate x position to distribute bars across canvas
+            
             x_position = spacing + (i * (bar_width + spacing))
 
-            # Calculate height based on pitch
+            
             normalized_pitch = (pitch - min_pitch) / pitch_range
             height = normalized_pitch * max_height
 
@@ -72,12 +72,13 @@ class Visualizer:
             note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
             note_name = note_names[note_in_octave]
             octave = (pitch - min_pitch) // 12
-            self.visualization_canvas.create_text(
-                (x1 + x2) / 2, y1 - 10,
-                text=f"{note_name}{octave}",
-                fill="white",  # White text for dark background
-                font=("Helvetica", 8)
-            )
+            
+            # self.visualization_canvas.create_text(
+            #     (x1 + x2) / 2, y1 - 10,
+            #     text=f"{note_name}{octave}",
+            #     fill="white",  # White text for dark background
+            #     font=("Helvetica", 8)
+            # )
 
     def visualize_midi(self, midi_file):
         """Visualizes the MIDI notes on the bar chart."""
