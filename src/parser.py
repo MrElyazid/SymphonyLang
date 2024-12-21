@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from lexer import SymphonyLangLexerError, tokens, lexer
+from src.lexer import SymphonyLangLexerError, tokens, lexer
 
 class SymphonyLangParserError(Exception):
     pass
@@ -96,7 +96,11 @@ parser = yacc.yacc()
 def parse_symphony_lang(input_text):
     try:
         lexer.input(input_text.strip())
-        return parser.parse(lexer=lexer)
+        result = parser.parse(lexer=lexer)
+        # Filter out None elements that come from newlines
+        if result:
+            result.elements = [elem for elem in result.elements if elem is not None]
+        return result
     except SymphonyLangLexerError as e:
         raise SymphonyLangParserError(f"Lexer error: {str(e)}")
 

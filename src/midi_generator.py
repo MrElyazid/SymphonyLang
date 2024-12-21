@@ -1,5 +1,5 @@
 import mido
-from parser import Composition, MusicElement
+from src.parser import Composition, MusicElement
 
 class MIDIGenerationError(Exception):
     pass
@@ -26,14 +26,27 @@ SCALE_PATTERNS = {
 def note_to_midi_number(note):
     try:
         base_note = note[0]
-        octave = int(note[-1])
+        if base_note not in NOTE_TO_MIDI:
+            raise MIDIGenerationError(f"Invalid note name: {base_note}")
+            
+        try:
+            octave = int(note[-1])
+        except (ValueError, IndexError):
+            raise MIDIGenerationError(f"Invalid octave in note: {note}")
+            
         midi_number = NOTE_TO_MIDI[base_note] + (octave - 4) * 12
+        
         if '#' in note:
             midi_number += 1
         elif 'b' in note:
             midi_number -= 1
+        elif any(c not in '0123456789' for c in note[1:]) and note[1] not in '#b':
+            raise MIDIGenerationError(f"Invalid note format: {note}")
+            
         return midi_number
-    except (KeyError, ValueError, IndexError):
+    except Exception as e:
+        if isinstance(e, MIDIGenerationError):
+            raise
         raise MIDIGenerationError(f"Invalid note: {note}")
 
 def generate_scale_notes(root_note, scale_type, extension=None):
