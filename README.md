@@ -1,5 +1,3 @@
-Here's a more concise version of your README.md while keeping the essential information:
-
 # SymphonyLang
 A simplified language for creating piano music that compiles to MIDI files. Features intuitive syntax for musical compositions with tempo control, notes, scales, chords, and rests.
 
